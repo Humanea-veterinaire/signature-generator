@@ -4,44 +4,148 @@
 <meta charset="UTF-8">
 <title>Générateur de signature Humanea</title>
 <style>
-    body { font-family: Poppins, Arial, sans-serif; margin: 30px; }
-    input, textarea { width: 100%; padding: 8px; margin: 6px 0; border: 1px solid #ccc; border-radius: 6px; }
-    button { background-color: #7C1653; color: white; padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; }
+    body { font-family: Poppins, Arial, sans-serif; margin: 30px; max-width: 700px; }
+    input, select { width: 100%; padding: 8px; margin: 6px 0; border: 1px solid #ccc; border-radius: 6px; }
+    button { background-color: #7C1653; color: white; padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; margin-top: 10px; }
     button:hover { background-color: #5f1041; }
     #result { margin-top: 20px; white-space: pre-wrap; font-family: monospace; background: #f9f9f9; padding: 15px; border-radius: 8px; }
+    #preview { margin-top: 20px; border: 1px solid #ccc; padding: 15px; }
+    .hidden { display: none; }
 </style>
 </head>
 <body>
 <h2>🖋️ Générateur de signature Humanea</h2>
 <p>Renseignez vos informations ci-dessous :</p>
 
-<label>Prenom et Nom (⚠️ Nom en majuscule) :</label>
-<input id="nom" placeholder="Jean DUPONT">
+<label>Prénom :</label>
+<input id="prenom" placeholder="Jean">
 
-<label>Titres (ex : DMV, MSc, Dipl. ECVD) :</label>
-<input id="titres" placeholder="DMV, MSc, Dipl. ECVD">
+<label>Nom :</label>
+<input id="nom" placeholder="Dupont">
 
-<label>Poste / Fonction :</label>
-<input id="fonction1" placeholder="Docteur vétérinaire">
-<input id="fonction2" placeholder="Spécialiste européen en dermatologie">
+<label>Poste :</label>
+<select id="fonctionSelect" onchange="updateFonction()">
+  <option value="">-- Sélectionnez --</option>
+  <option value="veterinaire">Docteur vétérinaire</option>
+  <option value="asv">Auxiliaire spécialisé vétérinaire</option>
+  <option value="autre">Autre</option>
+</select>
 
-<label>Email professionnel :</label>
-<input id="email" placeholder="j.dupont@humanea-veterinaire.fr">
+<div id="titreDiv" class="hidden">
+    <label>Titre(s) :</label>
+    <input id="titres" placeholder="DMV, MSc, Dipl. ECVD">
+</div>
 
-<button onclick="generer()">Générer ma signature</button>
+<div id="ligneLibreDiv" class="hidden">
+    <label>Ligne libre :</label>
+    <input id="ligneLibre" placeholder="Assistant en chirurgie / Ancien interne de l'ENVT">
+</div>
 
+<div id="autreRoleDiv" class="hidden">
+  <label>Précisez votre rôle :</label>
+  <input id="autreRole" placeholder="Responsable administratif, stagiaire, etc.">
+</div>
+
+<div id="veterinaireDetails" class="hidden">
+  <label>Statut vétérinaire :</label>
+  <select id="statutSpecialisation" onchange="updateSpecialisation()">
+    <option value="">Vétérinaire généraliste</option>
+    <option value="spec-fr">Spécialiste français</option>
+    <option value="spec-eur">Spécialiste européen (EBVS)</option>
+  </select>
+
+  <div id="specialiteDiv" class="hidden">
+    <label>Spécialité :</label>
+    <input id="specialite" placeholder="Dermatologie, chirurgie, médecine interne...">
+  </div>
+</div>
+
+<button onclick="generer()">Générer ma signature 🙂</button>
+<button onclick="copierHTML()">Copier le code HTML</button>
+
+<div id="preview"></div>
 <div id="result"></div>
 
 <script>
-function generer() {
-    const nom = document.getElementById('nom').value || "Jean Dupont";
-    const titres = document.getElementById('titres').value || "DMV";
-    const fonction1 = document.getElementById('fonction1').value || "Docteur vétérinaire";
-    const fonction2 = document.getElementById('fonction2').value || "";
-    const email = document.getElementById('email').value || "contact@humanea-veterinaire.fr";
-    const mailto = email.toLowerCase();
+function updateFonction() {
+  const fSelect = document.getElementById('fonctionSelect').value;
+  
+  document.getElementById('veterinaireDetails').classList.add('hidden');
+  document.getElementById('autreRoleDiv').classList.add('hidden');
+  document.getElementById('titreDiv').classList.add('hidden');
+  document.getElementById('ligneLibreDiv').classList.add('hidden');
 
-    const html = `<!DOCTYPE html>
+  // Réinitialisation des champs invisibles
+  document.getElementById('titres').value = "";
+  document.getElementById('ligneLibre').value = "";
+  document.getElementById('autreRole').value = "";
+  document.getElementById('specialite').value = "";
+  document.getElementById('statutSpecialisation').value = "";
+
+  if (fSelect === 'veterinaire') {
+    document.getElementById('veterinaireDetails').classList.remove('hidden');
+    document.getElementById('titreDiv').classList.remove('hidden');
+    document.getElementById('ligneLibreDiv').classList.remove('hidden');
+  } else if (fSelect === 'autre') {
+    document.getElementById('autreRoleDiv').classList.remove('hidden');
+  }
+}
+
+function updateSpecialisation() {
+  const statut = document.getElementById('statutSpecialisation').value;
+  const specialiteDiv = document.getElementById('specialiteDiv');
+  if (statut === 'spec-fr' || statut === 'spec-eur') {
+    specialiteDiv.classList.remove('hidden');
+  } else {
+    specialiteDiv.classList.add('hidden');
+  }
+}
+
+function formatNom(nom) {
+  return nom.toUpperCase();
+}
+
+function formatPrenom(prenom) {
+  if (!prenom) return "";
+  return prenom.charAt(0).toUpperCase() + prenom.slice(1).toLowerCase();
+}
+
+function generer() {
+  const prenom = formatPrenom(document.getElementById('prenom').value || "Jean");
+  const nom = formatNom(document.getElementById('nom').value || "DUPONT");
+  const titres = document.getElementById('titres').value || "";
+  const ligneLibre = document.getElementById('ligneLibre').value || "";
+
+  let fonction1 = "";
+  let fonction2 = "";
+  let ebvs = "";
+
+  const choix = document.getElementById('fonctionSelect').value;
+
+  if (choix === "veterinaire") {
+    fonction1 = "Docteur vétérinaire";
+    const statut = document.getElementById('statutSpecialisation').value;
+    const specialite = (document.getElementById('specialite').value || "").toLowerCase();
+
+    if (statut === "spec-fr") {
+      fonction2 = "Spécialiste";
+    } else if (statut === "spec-eur" && specialite) {
+      fonction2 = `Spécialiste européen en ${specialite}`;
+      ebvs = `<p style="font-size:11px;margin:0;line-height:1;">EBVS<sup>®</sup> European Board of Veterinary Specialisation</p>`;
+    } else if (statut === "spec-eur") {
+      fonction2 = "Spécialiste européen";
+      ebvs = `<p style="font-size:11px;margin:0;line-height:1;">EBVS<sup>®</sup> European Board of Veterinary Specialisation</p>`;
+    }
+  } else if (choix === "asv") {
+    fonction1 = "Auxiliaire spécialisé vétérinaire";
+  } else if (choix === "autre") {
+    fonction1 = document.getElementById('autreRole').value || "Membre de l'équipe Humanea";
+  }
+
+  // Email généré automatiquement
+  const email = `${prenom.charAt(0).toLowerCase()}.${nom.toLowerCase()}@humanea-veterinaire.fr`;
+
+  const html = `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
@@ -51,14 +155,15 @@ function generer() {
 <table width="600" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
 <tr>
 <td width="50%" valign="middle" style="padding-right:10px;">
-<p style="font-size:18px;font-weight:bold;margin:0 0 2px 0;line-height:1;">${nom}</p>
-<p style="color:#7C1653;font-weight:bold;margin:0 0 8px 0;line-height:1;">${titres}</p>
+<p style="font-size:18px;font-weight:bold;margin:0 0 2px 0;line-height:1;">${prenom} ${nom}</p>
+${titres ? `<p style="color:#7C1653;font-weight:bold;margin:0 0 8px 0;line-height:1;">${titres}</p>` : ""}
 <p style="font-size:11px;margin:0 0 4px 0;line-height:1;">${fonction1}</p>
-<p style="font-size:11px;margin:0 0 2px 0;line-height:1;">${fonction2}</p>
-<p style="font-size:11px;margin:0 0 15px 0;line-height:1;">EBVS<sup>®</sup> European Board of Veterinary Specialisation</p>
-<p style="text-align:center;margin:0;">
+${ligneLibre ? `<p style="font-size:11px;margin:0 0 2px 0;line-height:1;">${ligneLibre}</p>` : ""}
+${fonction2 ? `<p style="font-size:11px;margin:0 0 2px 0;line-height:1;">${fonction2}</p>` : ""}
+${ebvs}
+<div style="text-align:center; padding-top:10px; padding-bottom:15px;">
 <img src="https://www.locomotiv.com/wp-content/uploads/2025/02/humanea-logo-horizontal.png" width="200" alt="Humanea">
-</p>
+</div>
 </td>
 <td width="50%" valign="top" style="border-left:2px solid #7C1653;padding-left:15px;padding-top:10px;">
 <table cellspacing="0" cellpadding="0" border="0">
@@ -68,7 +173,7 @@ function generer() {
 </tr>
 <tr>
 <td><img src="https://www.locomotiv.com/wp-content/uploads/2025/02/6-1.png" width="15" style="vertical-align:middle;"></td>
-<td style="padding-left:5px;"><a href="mailto:${mailto}" style="color:black;text-decoration:none;font-size:11px;">${mailto}</a></td>
+<td style="padding-left:5px;"><a href="mailto:${email}" style="color:black;text-decoration:none;font-size:11px;">${email}</a></td>
 </tr>
 <tr>
 <td><img src="https://www.locomotiv.com/wp-content/uploads/2025/02/8.png" width="15" style="vertical-align:middle;"></td>
@@ -90,7 +195,15 @@ function generer() {
 </body>
 </html>`;
 
-    document.getElementById('result').innerText = html;
+  document.getElementById('result').innerText = html;
+  document.getElementById('preview').innerHTML = html;
+}
+
+function copierHTML() {
+  const result = document.getElementById('result').innerText;
+  navigator.clipboard.writeText(result).then(() => {
+    alert("Code HTML copié dans le presse-papier !");
+  });
 }
 </script>
 </body>
