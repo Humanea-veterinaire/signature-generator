@@ -23,14 +23,34 @@
   h2 { margin-top: 0; color: #7C1653; }
   label { display: block; margin-top: 10px; font-weight: 500; }
   input, select { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #ccc; border-radius: 6px; }
-  button { padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; margin-top: 15px; font-weight: bold; }
+  button { 
+    padding: 8px 15px; 
+    border: none; 
+    border-radius: 6px; 
+    cursor: pointer; 
+    margin-top: 15px; 
+    font-weight: bold; 
+    transition: all 0.2s ease;
+    position: relative;
+  }
+  button:hover { 
+    transform: translateY(-3px); 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
+  }
   #generateBtn { background-color: #7C1653; color: white; }
   #copyBtn { background-color: #3B2257; color: white; margin-left: 10px; }
   #resetBtn { background-color: #ccc; color: black; margin-left: 10px; }
   #preview { margin-top: 20px; border: 1px solid #ddd; background: #fff; padding: 15px; border-radius: 8px; }
   #result { display: none; }
   .hidden { display: none; }
-  .confirmation { color: green; margin-top: 10px; font-weight: bold; }
+  .confirmation { 
+    color: green; 
+    margin-top: 10px; 
+    font-weight: bold; 
+    opacity: 0; 
+    transition: opacity 0.5s ease;
+  }
+  .confirmation.show { opacity: 1; }
 </style>
 </head>
 <body>
@@ -104,7 +124,7 @@
   <button id="resetBtn" onclick="resetForm()">🔄 Réinitialiser le formulaire</button>
 </div>
 
-<div class="confirmation hidden" id="confirmationMessage">Votre signature a bien été générée ci-dessous ✅</div>
+<div class="confirmation" id="confirmationMessage">Votre signature a bien été générée ci-dessous ✅</div>
 <div id="preview"></div>
 <div id="result"></div>
 </div>
@@ -253,7 +273,10 @@ ${ligneFonctionHTML}
 
   document.getElementById('result').innerText = html;
   document.getElementById('preview').innerHTML = html;
-  document.getElementById('confirmationMessage').classList.remove('hidden');
+
+  const msg = document.getElementById('confirmationMessage');
+  msg.classList.add('show');
+  setTimeout(() => msg.classList.remove('show'), 2000);
 }
 
 function copierHTML() {
@@ -261,7 +284,7 @@ function copierHTML() {
   navigator.clipboard.writeText(result).then(() => {
     const btn = document.getElementById('copyBtn');
     btn.textContent = "Copié ✅";
-    setTimeout(() => btn.textContent = "Copier la signature (HTML)", 2000);
+    setTimeout(() => btn.textContent = "📋 Copier la signature (HTML)", 2000);
   });
 }
 
@@ -272,7 +295,7 @@ function resetForm() {
     .forEach(id => document.getElementById(id).classList.add('hidden'));
   document.getElementById('preview').innerHTML = "";
   document.getElementById('result').innerText = "";
-  document.getElementById('confirmationMessage').classList.add('hidden');
+  document.getElementById('confirmationMessage').classList.remove('show');
 }
 </script>
 </body>
