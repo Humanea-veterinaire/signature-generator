@@ -4,18 +4,39 @@
 <meta charset="UTF-8">
 <title>Générateur de signature Humanea</title>
 <style>
-    body { font-family: Poppins, Arial, sans-serif; margin: 30px; max-width: 700px; }
-    input, select { width: 100%; padding: 8px; margin: 6px 0; border: 1px solid #ccc; border-radius: 6px; }
-    button { background-color: #7C1653; color: white; padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; margin-top: 10px; }
-    button:hover { background-color: #5f1041; }
-    #result { margin-top: 20px; white-space: pre-wrap; font-family: monospace; background: #f9f9f9; padding: 15px; border-radius: 8px; }
-    #preview { margin-top: 20px; border: 1px solid #ccc; padding: 15px; }
-    .hidden { display: none; }
+  body { 
+    font-family: 'Poppins', Arial, sans-serif; 
+    background: #fafafa; 
+    margin: 0; 
+    padding: 30px; 
+    display: flex; 
+    justify-content: center; 
+  }
+  .card {
+    background: #fff; 
+    padding: 25px; 
+    border-radius: 10px; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+    max-width: 700px; 
+    width: 100%;
+  }
+  h2 { margin-top: 0; color: #7C1653; }
+  label { display: block; margin-top: 10px; font-weight: 500; }
+  input, select { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #ccc; border-radius: 6px; }
+  button { padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; margin-top: 15px; font-weight: bold; }
+  #generateBtn { background-color: #7C1653; color: white; }
+  #copyBtn { background-color: #3B2257; color: white; margin-left: 10px; }
+  #resetBtn { background-color: #ccc; color: black; margin-left: 10px; }
+  #preview { margin-top: 20px; border: 1px solid #ddd; background: #fff; padding: 15px; border-radius: 8px; }
+  #result { display: none; }
+  .hidden { display: none; }
+  .confirmation { color: green; margin-top: 10px; font-weight: bold; }
 </style>
 </head>
 <body>
+<div class="card">
 <h2>🖋️ Générateur de signature Humanea</h2>
-<p>Renseignez vos informations ci-dessous :</p>
+<p>Renseignez vos informations :</p>
 
 <label>Prénom :</label>
 <input id="prenom" placeholder="Jean">
@@ -37,8 +58,10 @@
 </div>
 
 <div id="ligneLibreDiv" class="hidden">
-    <label>Ligne libre :</label>
-    <input id="ligneLibre" placeholder="Assistant en chirurgie / Ancien interne de l'ENVT">
+    <label>Ligne libre 1 :</label>
+    <input id="ligneLibre" placeholder="Assistant en chirurgie">
+    <label>Ligne libre 2 (optionnel) :</label>
+    <input id="ligneLibre2" placeholder="Ancien interne de l'ENVT">
 </div>
 
 <div id="autreRoleDiv" class="hidden">
@@ -60,28 +83,23 @@
   </div>
 </div>
 
-<button onclick="generer()">Générer ma signature 🙂</button>
-<button onclick="copierHTML()">Copier le code HTML</button>
+<div style="margin-top:15px;">
+  <button id="generateBtn" onclick="generer()">Générer ma signature 🙂</button>
+  <button id="copyBtn" onclick="copierHTML()">Copier la signature (HTML)</button>
+  <button id="resetBtn" onclick="resetForm()">Réinitialiser le formulaire</button>
+</div>
 
+<div class="confirmation hidden" id="confirmationMessage">Votre signature a bien été générée ci-dessous ✅</div>
 <div id="preview"></div>
 <div id="result"></div>
+</div>
 
 <script>
 function updateFonction() {
   const fSelect = document.getElementById('fonctionSelect').value;
+  ['veterinaireDetails','autreRoleDiv','titreDiv','ligneLibreDiv'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  ['titres','ligneLibre','ligneLibre2','autreRole','specialite','statutSpecialisation'].forEach(id => document.getElementById(id).value = "");
   
-  document.getElementById('veterinaireDetails').classList.add('hidden');
-  document.getElementById('autreRoleDiv').classList.add('hidden');
-  document.getElementById('titreDiv').classList.add('hidden');
-  document.getElementById('ligneLibreDiv').classList.add('hidden');
-
-  // Réinitialisation des champs invisibles
-  document.getElementById('titres').value = "";
-  document.getElementById('ligneLibre').value = "";
-  document.getElementById('autreRole').value = "";
-  document.getElementById('specialite').value = "";
-  document.getElementById('statutSpecialisation').value = "";
-
   if (fSelect === 'veterinaire') {
     document.getElementById('veterinaireDetails').classList.remove('hidden');
     document.getElementById('titreDiv').classList.remove('hidden');
@@ -101,40 +119,38 @@ function updateSpecialisation() {
   }
 }
 
-function formatNom(nom) {
-  return nom.toUpperCase();
-}
-
-function formatPrenom(prenom) {
-  if (!prenom) return "";
-  return prenom.charAt(0).toUpperCase() + prenom.slice(1).toLowerCase();
-}
+function formatNom(nom) { return nom.toUpperCase(); }
+function formatPrenom(prenom) { return prenom ? prenom.charAt(0).toUpperCase() + prenom.slice(1).toLowerCase() : ""; }
+function cleanEmail(str) { return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g,'').toLowerCase(); }
 
 function generer() {
   const prenom = formatPrenom(document.getElementById('prenom').value || "Jean");
   const nom = formatNom(document.getElementById('nom').value || "DUPONT");
   const titres = document.getElementById('titres').value || "";
-  const ligneLibre = document.getElementById('ligneLibre').value || "";
+  const ligneLibre1 = document.getElementById('ligneLibre').value || "";
+  const ligneLibre2 = document.getElementById('ligneLibre2').value || "";
 
   let fonction1 = "";
   let fonction2 = "";
   let ebvs = "";
 
   const choix = document.getElementById('fonctionSelect').value;
-
   if (choix === "veterinaire") {
     fonction1 = "Docteur vétérinaire";
     const statut = document.getElementById('statutSpecialisation').value;
-    const specialite = (document.getElementById('specialite').value || "").toLowerCase();
+    const specialiteInput = document.getElementById('specialite').value.trim();
+    const specialite = specialiteInput ? specialiteInput.toLowerCase() : "";
 
-    if (statut === "spec-fr") {
+    if (statut === "spec-fr" && specialite) {
+      fonction2 = `Spécialiste en ${specialite}`;
+    } else if (statut === "spec-fr") {
       fonction2 = "Spécialiste";
     } else if (statut === "spec-eur" && specialite) {
       fonction2 = `Spécialiste européen en ${specialite}`;
-      ebvs = `<p style="font-size:11px;margin:0;line-height:1;">EBVS<sup>®</sup> European Board of Veterinary Specialisation</p>`;
+      ebvs = `<p style="font-size:11px;margin:0 0 2px 0;line-height:1;">EBVS<sup>®</sup> European Board of Veterinary Specialisation</p>`;
     } else if (statut === "spec-eur") {
       fonction2 = "Spécialiste européen";
-      ebvs = `<p style="font-size:11px;margin:0;line-height:1;">EBVS<sup>®</sup> European Board of Veterinary Specialisation</p>`;
+      ebvs = `<p style="font-size:11px;margin:0 0 2px 0;line-height:1;">EBVS<sup>®</sup> European Board of Veterinary Specialisation</p>`;
     }
   } else if (choix === "asv") {
     fonction1 = "Auxiliaire spécialisé vétérinaire";
@@ -142,8 +158,24 @@ function generer() {
     fonction1 = document.getElementById('autreRole').value || "Membre de l'équipe Humanea";
   }
 
-  // Email généré automatiquement
-  const email = `${prenom.charAt(0).toLowerCase()}.${nom.toLowerCase()}@humanea-veterinaire.fr`;
+  const email = `${cleanEmail(prenom.charAt(0))}.${cleanEmail(nom)}@humanea-veterinaire.fr`;
+
+  // Ordre pour vétérinaires : Titre → Docteur vétérinaire → Spécialisation → EBVS (si européen) → Ligne Libre 1 → Ligne Libre 2
+  let ligneFonctionHTML = "";
+  if (titres) ligneFonctionHTML += `<p style="color:#7C1653;font-weight:bold;margin:0 0 8px 0;line-height:1;">${titres}</p>`;
+  if (choix === "veterinaire") {
+    ligneFonctionHTML += `<p style="font-size:11px;margin:0 0 2px 0;line-height:1;">${fonction1}</p>`;
+    if (fonction2) ligneFonctionHTML += `<p style="font-size:11px;margin:0 0 2px 0;line-height:1;">${fonction2}</p>`;
+    if (ebvs) ligneFonctionHTML += ebvs;
+    if (ligneLibre1) ligneFonctionHTML += `<p style="font-size:11px;margin:0 0 2px 0;line-height:1;">${ligneLibre1}</p>`;
+    if (ligneLibre2) ligneFonctionHTML += `<p style="font-size:11px;margin:0 0 2px 0;line-height:1;">${ligneLibre2}</p>`;
+  } else {
+    if (ligneLibre1) ligneFonctionHTML += `<p style="font-size:11px;margin:0 0 2px 0;line-height:1;">${ligneLibre1}</p>`;
+    if (ligneLibre2) ligneFonctionHTML += `<p style="font-size:11px;margin:0 0 2px 0;line-height:1;">${ligneLibre2}</p>`;
+    ligneFonctionHTML += `<p style="font-size:11px;margin:0 0 4px 0;line-height:1;">${fonction1}</p>`;
+    if (fonction2) ligneFonctionHTML += `<p style="font-size:11px;margin:0 0 2px 0;line-height:1;">${fonction2}</p>`;
+    if (ebvs) ligneFonctionHTML += ebvs;
+  }
 
   const html = `<!DOCTYPE html>
 <html>
@@ -156,11 +188,7 @@ function generer() {
 <tr>
 <td width="50%" valign="middle" style="padding-right:10px;">
 <p style="font-size:18px;font-weight:bold;margin:0 0 2px 0;line-height:1;">${prenom} ${nom}</p>
-${titres ? `<p style="color:#7C1653;font-weight:bold;margin:0 0 8px 0;line-height:1;">${titres}</p>` : ""}
-<p style="font-size:11px;margin:0 0 4px 0;line-height:1;">${fonction1}</p>
-${ligneLibre ? `<p style="font-size:11px;margin:0 0 2px 0;line-height:1;">${ligneLibre}</p>` : ""}
-${fonction2 ? `<p style="font-size:11px;margin:0 0 2px 0;line-height:1;">${fonction2}</p>` : ""}
-${ebvs}
+${ligneFonctionHTML}
 <div style="text-align:center; padding-top:10px; padding-bottom:15px;">
 <img src="https://www.locomotiv.com/wp-content/uploads/2025/02/humanea-logo-horizontal.png" width="200" alt="Humanea">
 </div>
@@ -197,13 +225,25 @@ ${ebvs}
 
   document.getElementById('result').innerText = html;
   document.getElementById('preview').innerHTML = html;
+  document.getElementById('confirmationMessage').classList.remove('hidden');
 }
 
 function copierHTML() {
   const result = document.getElementById('result').innerText;
   navigator.clipboard.writeText(result).then(() => {
-    alert("Code HTML copié dans le presse-papier !");
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = "Copié ✅";
+    setTimeout(() => btn.textContent = "Copier la signature (HTML)", 2000);
   });
+}
+
+function resetForm() {
+  document.querySelectorAll('input').forEach(input => input.value = "");
+  document.querySelectorAll('select').forEach(select => select.value = "");
+  ['veterinaireDetails','autreRoleDiv','titreDiv','ligneLibreDiv'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  document.getElementById('preview').innerHTML = "";
+  document.getElementById('result').innerText = "";
+  document.getElementById('confirmationMessage').classList.add('hidden');
 }
 </script>
 </body>
