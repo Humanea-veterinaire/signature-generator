@@ -52,6 +52,14 @@
   <option value="autre">Autre</option>
 </select>
 
+<div id="genreASVDiv" class="hidden">
+  <label>Genre :</label>
+  <select id="genreASV">
+    <option value="femme">Femme</option>
+    <option value="homme">Homme</option>
+  </select>
+</div>
+
 <div id="titreDiv" class="hidden">
     <label>Titre(s) :</label>
     <input id="titres" placeholder="DMV, MSc, Dipl. ECVD">
@@ -64,9 +72,16 @@
     <input id="ligneLibre2" placeholder="Ancien interne de l'ENVT">
 </div>
 
+<div id="ligneLibreASVDiv" class="hidden">
+    <label>Ligne libre :</label>
+    <input id="ligneLibreASV" placeholder="Service d'imagerie médicale">
+</div>
+
 <div id="autreRoleDiv" class="hidden">
   <label>Précisez votre rôle :</label>
   <input id="autreRole" placeholder="Responsable administratif, stagiaire, etc.">
+  <label>Ligne libre (optionnelle) :</label>
+  <input id="ligneLibreAutre">
 </div>
 
 <div id="veterinaireDetails" class="hidden">
@@ -97,8 +112,10 @@
 <script>
 function updateFonction() {
   const fSelect = document.getElementById('fonctionSelect').value;
-  ['veterinaireDetails','autreRoleDiv','titreDiv','ligneLibreDiv'].forEach(id => document.getElementById(id).classList.add('hidden'));
-  ['titres','ligneLibre','ligneLibre2','autreRole','specialite','statutSpecialisation'].forEach(id => document.getElementById(id).value = "");
+  ['veterinaireDetails','autreRoleDiv','titreDiv','ligneLibreDiv','ligneLibreASVDiv','genreASVDiv']
+    .forEach(id => document.getElementById(id).classList.add('hidden'));
+  ['titres','ligneLibre','ligneLibre2','autreRole','specialite','statutSpecialisation','ligneLibreASV','ligneLibreAutre']
+    .forEach(id => { if (document.getElementById(id)) document.getElementById(id).value = ""; });
   
   if (fSelect === 'veterinaire') {
     document.getElementById('veterinaireDetails').classList.remove('hidden');
@@ -106,6 +123,9 @@ function updateFonction() {
     document.getElementById('ligneLibreDiv').classList.remove('hidden');
   } else if (fSelect === 'autre') {
     document.getElementById('autreRoleDiv').classList.remove('hidden');
+  } else if (fSelect === 'asv') {
+    document.getElementById('genreASVDiv').classList.remove('hidden');
+    document.getElementById('ligneLibreASVDiv').classList.remove('hidden');
   }
 }
 
@@ -129,10 +149,13 @@ function generer() {
   const titres = document.getElementById('titres').value || "";
   const ligneLibre1 = document.getElementById('ligneLibre').value || "";
   const ligneLibre2 = document.getElementById('ligneLibre2').value || "";
+  const ligneLibreASV = document.getElementById('ligneLibreASV').value || "";
+  const ligneLibreAutre = document.getElementById('ligneLibreAutre').value || "";
 
   let fonction1 = "";
   let fonction2 = "";
   let ebvs = "";
+  let extraPadding = "15px";
 
   const choix = document.getElementById('fonctionSelect').value;
   if (choix === "veterinaire") {
@@ -153,28 +176,33 @@ function generer() {
       ebvs = `<p style="font-size:11px;margin:0 0 2px 0;line-height:1;">EBVS<sup>®</sup> European Board of Veterinary Specialisation</p>`;
     }
   } else if (choix === "asv") {
-    fonction1 = "Auxiliaire spécialisé vétérinaire";
+    const genre = document.getElementById('genreASV').value;
+    extraPadding = "25px";
+    fonction1 = `<p style="color:#7C1653;font-weight:bold;margin:0 0 4px 0;line-height:1;font-size:14px;">Auxiliaire ${genre === "femme" ? "spécialisée" : "spécialisé"} vétérinaire</p>`;
   } else if (choix === "autre") {
-    fonction1 = document.getElementById('autreRole').value || "Membre de l'équipe Humanea";
+    const autreRole = document.getElementById('autreRole').value || "Membre de l'équipe Humanea";
+    fonction1 = `<p style="color:#7C1653;font-weight:bold;margin:0 0 4px 0;line-height:1;font-size:14px;">${autreRole}</p>`;
   }
 
   const email = `${cleanEmail(prenom.charAt(0))}.${cleanEmail(nom)}@humanea-veterinaire.fr`;
 
-  // Ordre pour vétérinaires : Titre → Docteur vétérinaire → Spécialisation → EBVS (si européen) → Ligne Libre 1 → Ligne Libre 2
   let ligneFonctionHTML = "";
   if (titres) ligneFonctionHTML += `<p style="color:#7C1653;font-weight:bold;margin:0 0 8px 0;line-height:1;">${titres}</p>`;
+  
   if (choix === "veterinaire") {
-    ligneFonctionHTML += `<p style="font-size:11px;margin:0 0 2px 0;line-height:1;">${fonction1}</p>`;
+    ligneFonctionHTML += `<p style="font-size:11px;margin:0 0 2px 0;line-height:1;">Docteur vétérinaire</p>`;
     if (fonction2) ligneFonctionHTML += `<p style="font-size:11px;margin:0 0 2px 0;line-height:1;">${fonction2}</p>`;
     if (ebvs) ligneFonctionHTML += ebvs;
     if (ligneLibre1) ligneFonctionHTML += `<p style="font-size:11px;margin:0 0 2px 0;line-height:1;">${ligneLibre1}</p>`;
     if (ligneLibre2) ligneFonctionHTML += `<p style="font-size:11px;margin:0 0 2px 0;line-height:1;">${ligneLibre2}</p>`;
-  } else {
-    if (ligneLibre1) ligneFonctionHTML += `<p style="font-size:11px;margin:0 0 2px 0;line-height:1;">${ligneLibre1}</p>`;
-    if (ligneLibre2) ligneFonctionHTML += `<p style="font-size:11px;margin:0 0 2px 0;line-height:1;">${ligneLibre2}</p>`;
-    ligneFonctionHTML += `<p style="font-size:11px;margin:0 0 4px 0;line-height:1;">${fonction1}</p>`;
-    if (fonction2) ligneFonctionHTML += `<p style="font-size:11px;margin:0 0 2px 0;line-height:1;">${fonction2}</p>`;
-    if (ebvs) ligneFonctionHTML += ebvs;
+  } 
+  else if (choix === "asv") {
+    ligneFonctionHTML += fonction1;
+    if (ligneLibreASV) ligneFonctionHTML += `<p style="font-size:11px;margin:0;margin-top:2px;line-height:1;">${ligneLibreASV}</p>`;
+  } 
+  else if (choix === "autre") {
+    ligneFonctionHTML += fonction1;
+    if (ligneLibreAutre) ligneFonctionHTML += `<p style="font-size:11px;margin:0;margin-top:2px;line-height:1;">${ligneLibreAutre}</p>`;
   }
 
   const html = `<!DOCTYPE html>
@@ -189,7 +217,7 @@ function generer() {
 <td width="50%" valign="middle" style="padding-right:10px;">
 <p style="font-size:18px;font-weight:bold;margin:0 0 2px 0;line-height:1;">${prenom} ${nom}</p>
 ${ligneFonctionHTML}
-<div style="text-align:center; padding-top:10px; padding-bottom:15px;">
+<div style="text-align:center; padding-top:10px; padding-bottom:${extraPadding};">
 <img src="https://www.locomotiv.com/wp-content/uploads/2025/02/humanea-logo-horizontal.png" width="200" alt="Humanea">
 </div>
 </td>
@@ -240,7 +268,8 @@ function copierHTML() {
 function resetForm() {
   document.querySelectorAll('input').forEach(input => input.value = "");
   document.querySelectorAll('select').forEach(select => select.value = "");
-  ['veterinaireDetails','autreRoleDiv','titreDiv','ligneLibreDiv'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  ['veterinaireDetails','autreRoleDiv','titreDiv','ligneLibreDiv','ligneLibreASVDiv','genreASVDiv']
+    .forEach(id => document.getElementById(id).classList.add('hidden'));
   document.getElementById('preview').innerHTML = "";
   document.getElementById('result').innerText = "";
   document.getElementById('confirmationMessage').classList.add('hidden');
